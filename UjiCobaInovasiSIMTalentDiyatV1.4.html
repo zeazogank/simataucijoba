@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIM Talent - Simulasi Manajemen Talenta ASN (BKN No 411/2025)</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        },
+                        bkn: {
+                            blue: '#1e3a8a',
+                            gold: '#d97706',
+                            emerald: '#059669',
+                            slate: '#334155',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Active Grid Highlighting Pulse */
+        .grid-box-active {
+            box-shadow: 0 0 0 4px #3b82f6, 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+            transform: scale(1.03);
+            z-index: 10;
+            transition: all 0.2s ease-in-out;
+        }
+        .matrix-cell {
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Info Button Animation */
+        .info-btn {
+            transition: color 0.2s, transform 0.2s;
+        }
+        .info-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased" onload="calculateTalentScore()">
+
+    <!-- Top Official Header -->
+    <header class="bg-slate-900 text-white border-b-4 border-amber-500 shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-amber-500 text-slate-900 p-2.5 rounded-xl font-black text-xl shadow-inner">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-extrabold text-lg sm:text-xl tracking-tight text-white">SIM Talent</h1>
+                        <span class="bg-amber-500/20 text-amber-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                            BKN No. 411/2025
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-300 font-medium hidden sm:block">
+                        Simulasi Manajemen Talenta ASN • Perangkat Daerah BKD Provinsi NTB
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3 no-print">
+                <button onclick="loadPreset('high')" class="px-2 py-1.5 sm:px-3 text-[10px] sm:text-xs font-semibold bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg transition-all shadow-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-star"></i> <span class="hidden sm:inline">Sample High Talent</span><span class="sm:hidden">High</span>
+                </button>
+                <button onclick="loadPreset('mid')" class="px-2 py-1.5 sm:px-3 text-[10px] sm:text-xs font-semibold bg-sky-700 hover:bg-sky-600 text-white rounded-lg transition-all shadow-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-check"></i> <span class="hidden sm:inline">Sample Standar</span><span class="sm:hidden">Mid</span>
+                </button>
+                <button onclick="resetForm()" class="px-2 py-1.5 sm:px-3 text-[10px] sm:text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-all shadow-sm">
+                    <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline">Reset</span>
+                </button>
+                <button onclick="window.print()" class="px-2 py-1.5 sm:px-3 text-[10px] sm:text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg transition-all shadow-md flex items-center gap-1.5">
+                    <i class="fa-solid fa-print"></i> <span class="hidden sm:inline">Cetak PDF</span><span class="sm:hidden">Cetak</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
+
+        <!-- LEFT COLUMN: Parameter Input Forms -->
+        <section class="lg:col-span-5 flex flex-col gap-5 no-print">
+            
+            <!-- Employee Profile Input Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                    <h2 class="font-bold text-slate-900 flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-user-gear text-blue-600"></i> Profil Pegawai ASN
+                    </h2>
+                    <span class="text-[11px] bg-slate-100 text-slate-600 font-medium px-2 py-0.5 rounded-full">Simulasi</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Nama Pegawai</label>
+                        <input type="text" id="asnName" value="IHDIYAT REA BUSTANI, S.STP., M.A.P." oninput="calculateTalentScore()" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Perangkat Daerah / Instansi</label>
+                        <input type="text" id="asnUnit" value="BADAN KEPEGAWAIAN DAERAH PROVINSI NTB" oninput="calculateTalentScore()" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">NIP</label>
+                        <input type="text" id="asnNip" value="199408152016091002" oninput="calculateTalentScore()" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Jenjang Jabatan</label>
+                        <select id="asnTarget" onchange="calculateTalentScore()" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white">
+                            <optgroup label="Jabatan Pimpinan Tinggi (JPT)">
+                                <option value="Jenjang JPT Utama">JPT Utama</option>
+                                <option value="Jenjang JPT Madya">JPT Madya</option>
+                                <option value="Jenjang JPT Pratama">JPT Pratama</option>
+                            </optgroup>
+                            <optgroup label="Jabatan Administrasi (JA)">
+                                <option value="Jenjang Jabatan Administrator">Jabatan Administrator</option>
+                                <option value="Jenjang Jabatan Pengawas">Jabatan Pengawas</option>
+                                <option value="Jenjang Jabatan Pelaksana">Jabatan Pelaksana</option>
+                            </optgroup>
+                            <optgroup label="Jabatan Fungsional (JF) Keahlian">
+                                <option value="Jenjang JF Ahli Utama">JF Ahli Utama</option>
+                                <option value="Jenjang JF Ahli Madya">JF Ahli Madya</option>
+                                <option value="Jenjang JF Ahli Muda" selected>JF Ahli Muda</option>
+                                <option value="Jenjang JF Ahli Pertama">JF Ahli Pertama</option>
+                            </optgroup>
+                            <optgroup label="Jabatan Fungsional (JF) Keterampilan">
+                                <option value="Jenjang JF Penyelia">JF Penyelia</option>
+                                <option value="Jenjang JF Mahir">JF Mahir</option>
+                                <option value="Jenjang JF Terampil">JF Terampil</option>
+                                <option value="Jenjang JF Pemula">JF Pemula</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PARAMETER SUMBU Y: KINERJA -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-900 to-slate-900 p-4 text-white flex justify-between items-center">
+                    <div>
+                        <h2 class="font-bold text-sm tracking-wide flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-amber-400"></i> PARAMETER KINERJA (SUMBU Y)
+                        </h2>
+                        <p class="text-[11px] text-slate-300">Total Pembobotan: Kinerja Utama (60%) + Kinerja Penguat (40%)</p>
+                    </div>
+                    <span id="badgeScoreY" class="bg-amber-500 text-slate-950 font-extrabold text-xs px-2.5 py-1 rounded-lg shadow-sm whitespace-nowrap">
+                        Skor Y: 0.00
+                    </span>
+                </div>
+
+                <div class="p-5 space-y-4 text-xs">
+                    <!-- 1. Kinerja Utama (60%) -->
+                    <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100">
+                        <div class="flex justify-between items-center mb-1.5 flex-wrap gap-1">
+                            <label class="font-bold text-slate-900 flex items-center gap-1.5">
+                                1. Kinerja Utama (Bobot 60%)
+                                <button type="button" onclick="showInfoModal('kinerjaUtama')" class="info-btn text-slate-400 hover:text-blue-600 focus:outline-none" title="Lihat Definisi & Cara Pengukuran">
+                                    <i class="fa-solid fa-circle-info text-sm"></i>
+                                </button>
+                            </label>
+                            <span class="text-[10px] bg-blue-200 text-blue-900 font-semibold px-2 py-0.5 rounded whitespace-nowrap">Penilaian Kinerja e-Kinerja</span>
+                        </div>
+                        <select id="kinerjaUtama" onchange="calculateTalentScore()" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                            <option value="100">Sangat Baik (Nilai: 100)</option>
+                            <option value="80" selected>Baik (Nilai: 80)</option>
+                            <option value="60">Butuh Perbaikan (Nilai: 60)</option>
+                            <option value="40">Kurang (Nilai: 40)</option>
+                            <option value="20">Sangat Kurang (Nilai: 20)</option>
+                        </select>
+                    </div>
+
+                    <!-- 2. Kinerja Penguat (40%) -->
+                    <div class="space-y-3">
+                        <span class="font-bold text-slate-800 block text-xs border-b pb-1">2. Kinerja Penguat (Bobot 40% Total Sumbu Y)</span>
+                        
+                        <!-- Penghargaan (15%) -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="font-medium text-slate-700 flex items-center gap-1.5">
+                                    a. Penghargaan Prestasi (Bobot 15%)
+                                    <button type="button" onclick="showInfoModal('penghargaan')" class="info-btn text-slate-400 hover:text-blue-600 focus:outline-none" title="Lihat Definisi">
+                                        <i class="fa-solid fa-circle-info text-[11px]"></i>
+                                    </button>
+                                </label>
+                                <span class="text-slate-500 text-[11px]">5 Tahun Terakhir</span>
+                            </div>
+                            <select id="penghargaan" onchange="calculateTalentScore()" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                <option value="100">Lingkup Internasional (Nilai: 100)</option>
+                                <option value="75">Lingkup Nasional (Nilai: 75)</option>
+                                <option value="50">Lingkup Lintas Instansi (Nilai: 50)</option>
+                                <option value="25" selected>Lingkup Internal Instansi (Nilai: 25)</option>
+                                <option value="0">Tidak Pernah Mendapatkan Penghargaan (Nilai: 0)</option>
+                            </select>
+                        </div>
+
+                        <!-- Penugasan Tim Kerja (15%) -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="font-medium text-slate-700 flex items-center gap-1.5">
+                                    b. Penugasan dalam Tim Kerja (Bobot 15%)
+                                    <button type="button" onclick="showInfoModal('timKerja')" class="info-btn text-slate-400 hover:text-blue-600 focus:outline-none" title="Lihat Definisi">
+                                        <i class="fa-solid fa-circle-info text-[11px]"></i>
+                                    </button>
+                                </label>
+                                <span class="text-slate-500 text-[11px]">2 Tahun Terakhir</span>
+                            </div>
+                            <select id="timKerja" onchange="calculateTalentScore()" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                <option value="100">Ketua Tim Kerja Lingkup Lintas Instansi (Nilai: 100)</option>
+                                <option value="75" selected>Ketua Tim Kerja Lingkup Internal Instansi (Nilai: 75)</option>
+                                <option value="50">Anggota Tim Kerja Lingkup Lintas Instansi (Nilai: 50)</option>
+                                <option value="25">Anggota Tim Kerja Lingkup Internal Instansi (Nilai: 25)</option>
+                                <option value="0">Tidak Mempunyai Penugasan Tim Kerja (Nilai: 0)</option>
+                            </select>
+                        </div>
+
+                        <!-- Umpan Balik 360 (10%) -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="font-medium text-slate-700 flex items-center gap-1.5">
+                                    c. Umpan Balik 360 Derajat (Bobot 10%)
+                                    <button type="button" onclick="showInfoModal('umpanBalik')" class="info-btn text-slate-400 hover:text-blue-600 focus:outline-none" title="Lihat Definisi">
+                                        <i class="fa-solid fa-circle-info text-[11px]"></i>
+                                    </button>
+                                </label>
+                                <span class="text-slate-500 text-[11px]">Atasan, Peer, Bawahan</span>
+                            </div>
+                            <select id="umpanBalik" onchange="calculateTalentScore()" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                <option value="100">Sangat Baik (Nilai: 100)</option>
+                                <option value="80" selected>Baik (Nilai: 80)</option>
+                                <option value="60">Butuh Perbaikan (Nilai: 60)</option>
+                                <option value="40">Kurang (Nilai: 40)</option>
+                                <option value="20">Sangat Kurang (Nilai: 20)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PARAMETER SUMBU X: POTENSIAL -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-gradient-to-r from-emerald-900 to-slate-900 p-4 text-white flex justify-between items-center">
+                    <div>
+                        <h2 class="font-bold text-sm tracking-wide flex items-center gap-2">
+                            <i class="fa-solid fa-brain text-emerald-400"></i> PARAMETER POTENSIAL (SUMBU X)
+                        </h2>
+                        <p class="text-[11px] text-slate-300">Kompetensi (40%) + Potensi (25%) + Kualifikasi (20%) + Disiplin (15%)</p>
+                    </div>
+                    <span id="badgeScoreX" class="bg-emerald-500 text-slate-950 font-extrabold text-xs px-2.5 py-1 rounded-lg shadow-sm whitespace-nowrap">
+                        Skor X: 0.00
+                    </span>
+                </div>
+
+                <div class="p-5 space-y-4 text-xs">
+                    
+                    <!-- 1. Kompetensi (40%) -->
+                    <div class="border-b pb-3">
+                        <span class="font-bold text-slate-900 block mb-2">1. Komponen Kompetensi (Bobot Total 40%)</span>
+                        
+                        <div class="space-y-3 pl-2 border-l-2 border-slate-100">
+                            <div class="pl-2">
+                                <label class="font-medium text-slate-700 mb-1 flex items-center gap-1.5">
+                                    a. Penilaian Kompetensi (Bobot 20% / Skala 0-100)
+                                    <button type="button" onclick="showInfoModal('penilaianKompetensi')" class="info-btn text-slate-400 hover:text-emerald-600 focus:outline-none" title="Lihat Definisi">
+                                        <i class="fa-solid fa-circle-info text-[11px]"></i>
+                                    </button>
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" id="kompetensiScore" step="0.01" min="0" max="100" value="85" oninput="calculateTalentScore()" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-semibold text-emerald-700" placeholder="Masukkan nilai (contoh: 85.50)">
+                                    <span class="text-xs font-bold text-slate-500">/ 100</span>
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-1">*Bisa diisi nilai desimal. Jika melebihi 100, otomatis dihitung maksimal 100.</p>
+                            </div>
+
+                            <div class="pl-2">
+                                <label class="font-medium text-slate-700 mb-1 flex items-center gap-1.5">
+                                    b. Pengembangan Kompetensi (Bobot 10%)
+                                    <button type="button" onclick="showInfoModal('pengembanganKompetensi')" class="info-btn text-slate-400 hover:text-emerald-600 focus:outline-none" title="Lihat Definisi">
+                                        <i class="fa-solid fa-circle-info text-[11px]"></i>
+                                    </button>
+                                </label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div>
+                                        <span class="text-[10px] text-slate-500 block mb-0.5">Sertifikat Pelatihan (3 thn)</span>
+                                        <select id="sertifikatPelatihan" onchange="calculateTalentScore()" class="w-full p-2 text-[11px] rounded border border-slate-300 bg-white">
+                                            <option value="100">≥ 8 Sertifikat (100)</option>
+                                            <option value="75" selected>6 - 8 Sertifikat (75)</option>
+                                            <option value="50">4 - 6 Sertifikat (50)</option>
+                                            <option value="25">1 - 3 Sertifikat (25)</option>
+                                            <option value="0">0 Sertifikat (0)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] text-slate-500 block mb-0.5">Sertifikasi Keahlian / Diklat</span>
+                                        <select id="sertifikasiKeahlian" onchange="calculateTalentScore()" class="w-full p-2 text-[11px] rounded border border-slate-300 bg-white">
+                                            <option value="100">≥ 3 Sertifikasi (100)</option>
+                                            <option value="50" selected>1 - 2 Sertifikasi (50)</option>
+                                            <option value="0">0 Sertifikasi (0)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pl-2">
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <label class="font-medium text-slate-700 flex items-center gap-1.5">
+                                        c. Pengalaman Jabatan (Bobot 10%)
+                                        <button type="button" onclick="showInfoModal('pengalamanJabatan')" class="info-btn text-slate-400 hover:text-emerald-600 focus:outline-none" title="Lihat Definisi">
+                                            <i class="fa-solid fa-circle-info text-[11px]"></i>
+                                        </button>
+                                    </label>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <select id="lamaJabatan" onchange="calculateTalentScore()" class="w-full p-2 text-[11px] rounded border border-slate-300 bg-white">
+                                        <option value="100" selected>Masa Kerja Jabatan ≥ 5 Tahun (100)</option>
+                                        <option value="80">Masa Kerja Jabatan 3 - 4 Tahun (80)</option>
+                                        <option value="60">Masa Kerja Jabatan &lt; 3 Tahun (60)</option>
+                                    </select>
+                                    <select id="keragamanJabatan" onchange="calculateTalentScore()" class="w-full p-2 text-[11px] rounded border border-slate-300 bg-white">
+                                        <option value="100" selected>Pengalaman Jabatan Lintas Instansi (100)</option>
+                                        <option value="80">Pengalaman Jabatan Lintas Unit Kerja (80)</option>
+                                        <option value="60">Pengalaman Jabatan Hanya 1 Unit Kerja (60)</option>
+                                    </select>
+                                    <select id="jabatanNonDefinitif" onchange="calculateTalentScore()" class="w-full p-2 text-[11px] rounded border border-slate-300 bg-white">
+                                        <option value="100">Penjabat (Pj.) Kepala Daerah (100)</option>
+                                        <option value="80">Pelaksana Tugas (Plt.) Jabatan Lebih Tinggi (80)</option>
+                                        <option value="60" selected>Pelaksana Tugas (Plt.) Jabatan Setara (60)</option>
+                                        <option value="40">Pelaksana Harian (Plh.) Jabatan Lebih Tinggi (40)</option>
+                                        <option value="20">Pelaksana Harian (Plh.) Jabatan Setara (20)</option>
+                                        <option value="0">Tidak Memiliki Jabatan Nondefinitif (0)</option>
+                                    </select>
+                                    <p class="text-[9px] text-slate-400 mt-1 italic">*Nilai dihitung sebagai rata-rata dari 3 komponen di atas.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Potensi (25%) -->
+                    <div class="border-b pb-3">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-bold text-slate-900 flex items-center gap-1.5">
+                                2. Komponen Potensi (Bobot 25% / 8 Indikator)
+                                <button type="button" onclick="showInfoModal('potensi')" class="info-btn text-slate-400 hover:text-emerald-600 focus:outline-none" title="Lihat Definisi">
+                                    <i class="fa-solid fa-circle-info text-[11px]"></i>
+                                </button>
+                            </label>
+                            <span id="potensiTotalLabel" class="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Total 32/40</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mb-2">Nilai 0 - 5 per indikator potensi psikologis & kapabilitas</p>
+                        
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px]">
+                            <div>
+                                <span class="block truncate">1. Intelektual</span>
+                                <input type="number" min="0" max="5" value="4" class="potensi-input w-full p-1.5 border rounded" oninput="calculateTalentScore()">
+                            </div>
+                            <div>
+                                <span class="block truncate">2. Interpersonal</span>
+                                <input type="number" min="0" max="5" value="4" class="potensi-input w-full p-1.5 border rounded" oninput="calculateTalentScore()">
+                            </div>
+                            <div>
+                                <span class="block truncate">3. Kesadaran Diri</span>
+                                <input type="number" min="0" max="5" value="4" class="potensi-input w-full p-1.5 border rounded" oninput="calculateTalentScore()">
+                            </div>
+                            <div>
+                                <span class="block truncate">4. Berpikir Kritis</span>
+                                <input type="number" min="0" max="5" value="4" class="potensi-input w-full p-1.5 border rounded" oninput="calculateTalentScore()">
+                            </div>
+                            <div>
+                                <span class="block truncate">5. Problem Solving</span>
+                                <input type="number" min="0" max="5" value="4" class="potensi-input w-full p-1.5 border rounded" oninput="calculateTalentScore()">
+                            </div>
+                            <div>
+                                <span class="block truncate">6. Kecerdasan Emosi</span>
+                                <input type="number" min="0" max="5" value="4" class="potensi-input w-full p-1.5 border rounded" oninput="calculateTalentScore()">
+                            </div>
+                            <div>
+                                <span class="block truncate">7. Belajar Cepat</span>
+                                <input type="number" min="0" max="5" value="4" class="potensi-input w-full p-1.5 border rounded" oninput="calculateTalentScore()">
+                            </div>
+                            <div>
+                                <span class="block truncate">8. Motivasi/Komitmen</span>
+                                <input type="number" min="0" max="5" value="4" class="potensi-input w-full p-1.5 border rounded" oninput="calculateTalentScore()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Kualifikasi (20%) & 4. Disiplin (15%) -->
+                    <div class="space-y-3">
+                        <div>
+                            <label class="font-bold text-slate-900 mb-1 flex items-center gap-1.5">
+                                3. Kualifikasi Pendidikan (Bobot 20%)
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                    <div class="flex justify-between text-[10px] text-slate-500 mb-0.5">
+                                        <span>Tingkat Pendidikan</span>
+                                        <button type="button" onclick="showInfoModal('pendidikanFormal')" class="info-btn text-slate-400 hover:text-emerald-600 focus:outline-none" title="Lihat Definisi"><i class="fa-solid fa-circle-info"></i></button>
+                                    </div>
+                                    <select id="pendidikanFormal" onchange="calculateTalentScore()" class="w-full p-2 rounded border border-slate-300 bg-white">
+                                        <option value="100">Doktor (S3) (100)</option>
+                                        <option value="90" selected>Magister (S2) (90)</option>
+                                        <option value="80">Sarjana (S1) / DIV (80)</option>
+                                        <option value="70">Diploma III (70)</option>
+                                        <option value="60">SLTA Sederajat (60)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-[10px] text-slate-500 mb-0.5">
+                                        <span>Kesesuaian Bidang</span>
+                                        <button type="button" onclick="showInfoModal('kesesuaianBidang')" class="info-btn text-slate-400 hover:text-emerald-600 focus:outline-none" title="Lihat Definisi"><i class="fa-solid fa-circle-info"></i></button>
+                                    </div>
+                                    <select id="kesesuaianBidang" onchange="calculateTalentScore()" class="w-full p-2 rounded border border-slate-300 bg-white">
+                                        <option value="100" selected>Rumpun Ilmu Sesuai (100)</option>
+                                        <option value="50">Rumpun Tidak Sesuai (50)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="font-bold text-slate-900 mb-1 flex items-center gap-1.5">
+                                4. Integritas & Moralitas (Bobot 15%)
+                                <button type="button" onclick="showInfoModal('disiplin')" class="info-btn text-slate-400 hover:text-emerald-600 focus:outline-none" title="Lihat Definisi">
+                                    <i class="fa-solid fa-circle-info text-[11px]"></i>
+                                </button>
+                            </label>
+                            <select id="rekamDisiplin" onchange="calculateTalentScore()" class="w-full p-2 rounded border border-slate-300 bg-white">
+                                <option value="100" selected>Tidak Pernah Dijatuhi Hukuman Disiplin (100)</option>
+                                <option value="75">Pernah Hukuman Disiplin Ringan (75)</option>
+                                <option value="50">Pernah Hukuman Disiplin Sedang (50)</option>
+                                <option value="25">Pernah Hukuman Disiplin Berat (25)</option>
+                                <option value="0">Sedang Menjalani Hukuman Disiplin (0)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: 9-Box Matrix & Analytics Dashboard -->
+        <section class="lg:col-span-7 flex flex-col gap-5 print:col-span-12">
+            
+            <!-- Result Summary Overview Card -->
+            <div class="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-800 relative overflow-hidden print:bg-white print:text-black print:border-gray-300">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-600/10 rounded-full blur-2xl pointer-events-none no-print"></div>
+                
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 print:border-gray-200 pb-4 mb-4">
+                    <div class="w-full sm:w-auto">
+                        <span class="text-[10px] sm:text-xs font-semibold text-amber-400 print:text-gray-600 uppercase tracking-widest">Hasil Pemetaan Simulasi Talenta</span>
+                        <h2 id="outPegawaiName" class="text-base sm:text-lg font-extrabold text-white print:text-black break-words">IHDIYAT REA BUSTANI, S.STP., M.A.P.</h2>
+                        <p id="outPegawaiInstansi" class="text-[10px] sm:text-xs text-slate-400 print:text-gray-700 mt-1">BADAN KEPEGAWAIAN DAERAH PROVINSI NTB • NIP: 199408152016091002 • Jenjang JF Ahli Muda</p>
+                    </div>
+
+                    <div class="bg-slate-800/80 print:bg-gray-100 backdrop-blur px-4 py-2 rounded-xl border border-slate-700 print:border-gray-300 text-center shrink-0 w-full sm:w-auto">
+                        <span class="text-[10px] text-slate-400 print:text-gray-500 block uppercase font-semibold">Posisi Terpetakan</span>
+                        <span id="outBoxBadge" class="text-xl font-black text-amber-400 print:text-black">KOTAK 8</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+                    <div class="bg-slate-800/50 print:bg-white p-2.5 rounded-xl border border-slate-700/50 print:border-gray-200">
+                        <span class="text-[10px] text-slate-400 print:text-gray-600 block">Nilai Kinerja (Sumbu Y)</span>
+                        <span id="outValueY" class="text-lg sm:text-base font-bold text-sky-400 print:text-blue-600">77.00</span>
+                        <span id="outCatY" class="text-[10px] block font-medium text-slate-300 print:text-gray-800 mt-0.5">Sesuai Ekspektasi</span>
+                    </div>
+
+                    <div class="bg-slate-800/50 print:bg-white p-2.5 rounded-xl border border-slate-700/50 print:border-gray-200">
+                        <span class="text-[10px] text-slate-400 print:text-gray-600 block">Nilai Potensial (Sumbu X)</span>
+                        <span id="outValueX" class="text-lg sm:text-base font-bold text-emerald-400 print:text-green-600">82.50</span>
+                        <span id="outCatX" class="text-[10px] block font-medium text-slate-300 print:text-gray-800 mt-0.5">Tinggi</span>
+                    </div>
+
+                    <div class="bg-slate-800/50 print:bg-white p-2.5 rounded-xl border border-slate-700/50 print:border-gray-200">
+                        <span class="text-[10px] text-slate-400 print:text-gray-600 block">Status Kelayakan</span>
+                        <span id="outStatus" class="text-xs font-bold text-amber-300 print:text-amber-700 mt-1 block">Siap Ditinjau Promosi</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9-BOX TALENT MATRIX GRID VISUALIZATION -->
+            <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 print:shadow-none">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-border-all text-blue-600"></i> Matriks 9 Kotak Manajemen Talenta ASN
+                        </h3>
+                        <p class="text-xs text-slate-500">Berdasarkan Standar Keputusan Kepala BKN No. 411 Tahun 2025</p>
+                    </div>
+                    <span class="text-[10px] text-slate-400 italic bg-slate-50 px-2 py-1 rounded border">Sumbu Y: Kinerja • Sumbu X: Potensial</span>
+                </div>
+
+                <!-- Matrix Box Layout -->
+                <div class="relative pl-6 sm:pl-8 pb-6 sm:pb-8">
+                    <!-- Y-Axis Label -->
+                    <div class="absolute left-0 top-0 bottom-6 sm:bottom-8 w-4 sm:w-6 flex items-center justify-center">
+                        <span class="-rotate-90 text-[9px] sm:text-[11px] font-bold tracking-widest text-slate-400 uppercase whitespace-nowrap">
+                            KINERJA (SUMBU Y)
+                        </span>
+                    </div>
+
+                    <!-- 3x3 Grid -->
+                    <div class="grid grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 aspect-square sm:aspect-[4/3] text-xs">
+                        
+                        <!-- ROW 1: Di Atas Ekspektasi (Y >= 80) -->
+                        <div id="box-4" class="matrix-cell p-1.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200 bg-amber-50/40 flex flex-col justify-between items-center text-center">
+                            <span class="font-extrabold text-amber-700 text-[10px] sm:text-xs">Kotak 4</span>
+                            <div>
+                                <p class="font-bold text-slate-800 text-[8px] sm:text-[10px] leading-tight mb-1">Kinerja Di Atas<br>Potensial Rendah</p>
+                            </div>
+                            <span class="text-[7px] sm:text-[9px] text-slate-500 block">Rotasi & Bangkom</span>
+                        </div>
+
+                        <div id="box-7" class="matrix-cell p-1.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200 bg-emerald-50/50 flex flex-col justify-between items-center text-center">
+                            <span class="font-extrabold text-emerald-700 text-[10px] sm:text-xs">Kotak 7</span>
+                            <div>
+                                <p class="font-bold text-emerald-900 text-[8px] sm:text-[10px] leading-tight mb-1">Kinerja Di Atas<br>Potensial Menengah</p>
+                            </div>
+                            <span class="text-[7px] sm:text-[9px] text-emerald-700 block">Suksesi Instansi</span>
+                        </div>
+
+                        <div id="box-9" class="matrix-cell p-1.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200 bg-amber-50 flex flex-col justify-between items-center text-center">
+                            <span class="font-extrabold text-amber-700 text-[10px] sm:text-xs">Kotak 9</span>
+                            <div>
+                                <p class="font-bold text-amber-950 text-[8px] sm:text-[10px] leading-tight mb-1">Kinerja Di Atas<br>Potensial Tinggi</p>
+                            </div>
+                            <span class="text-[7px] sm:text-[9px] text-amber-800 font-bold block">Promosi & Suksesi Nasional</span>
+                        </div>
+
+                        <!-- ROW 2: Sesuai Ekspektasi (60 <= Y < 80) -->
+                        <div id="box-2" class="matrix-cell p-1.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between items-center text-center">
+                            <span class="font-extrabold text-slate-500 text-[10px] sm:text-xs">Kotak 2</span>
+                            <div>
+                                <p class="font-bold text-slate-800 text-[8px] sm:text-[10px] leading-tight mb-1">Kinerja Sesuai<br>Potensial Rendah</p>
+                            </div>
+                            <span class="text-[7px] sm:text-[9px] text-slate-500 block">Bimbingan & Penempatan</span>
+                        </div>
+
+                        <div id="box-5" class="matrix-cell p-1.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200 bg-blue-50/50 flex flex-col justify-between items-center text-center">
+                            <span class="font-extrabold text-blue-700 text-[10px] sm:text-xs">Kotak 5</span>
+                            <div>
+                                <p class="font-bold text-blue-900 text-[8px] sm:text-[10px] leading-tight mb-1">Kinerja Sesuai<br>Potensial Menengah</p>
+                            </div>
+                            <span class="text-[7px] sm:text-[9px] text-blue-700 block">Penempatan Sesuai & Bangkom</span>
+                        </div>
+
+                        <div id="box-8" class="matrix-cell p-1.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200 bg-emerald-50 flex flex-col justify-between items-center text-center">
+                            <span class="font-extrabold text-emerald-800 text-[10px] sm:text-xs">Kotak 8</span>
+                            <div>
+                                <p class="font-bold text-emerald-950 text-[8px] sm:text-[10px] leading-tight mb-1">Kinerja Sesuai<br>Potensial Tinggi</p>
+                            </div>
+                            <span class="text-[7px] sm:text-[9px] text-emerald-800 block">Suksesi Instansi & Perluasan</span>
+                        </div>
+
+                        <!-- ROW 3: Di Bawah Ekspektasi (Y < 60) -->
+                        <div id="box-1" class="matrix-cell p-1.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200 bg-rose-50/40 flex flex-col justify-between items-center text-center">
+                            <span class="font-extrabold text-rose-500 text-[10px] sm:text-xs">Kotak 1</span>
+                            <div>
+                                <p class="font-bold text-rose-900 text-[8px] sm:text-[10px] leading-tight mb-1">Kinerja Di Bawah<br>Potensial Rendah</p>
+                            </div>
+                            <span class="text-[7px] sm:text-[9px] text-rose-600 block">Diproses Peraturan</span>
+                        </div>
+
+                        <div id="box-3" class="matrix-cell p-1.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200 bg-rose-50/30 flex flex-col justify-between items-center text-center">
+                            <span class="font-extrabold text-amber-600 text-[10px] sm:text-xs">Kotak 3</span>
+                            <div>
+                                <p class="font-bold text-amber-900 text-[8px] sm:text-[10px] leading-tight mb-1">Kinerja Di Bawah<br>Potensial Menengah</p>
+                            </div>
+                            <span class="text-[7px] sm:text-[9px] text-amber-700 block">Konseling Kinerja</span>
+                        </div>
+
+                        <div id="box-6" class="matrix-cell p-1.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200 bg-sky-50/50 flex flex-col justify-between items-center text-center">
+                            <span class="font-extrabold text-sky-700 text-[10px] sm:text-xs">Kotak 6</span>
+                            <div>
+                                <p class="font-bold text-sky-900 text-[8px] sm:text-[10px] leading-tight mb-1">Kinerja Di Bawah<br>Potensial Tinggi</p>
+                            </div>
+                            <span class="text-[7px] sm:text-[9px] text-sky-700 block">Penempatan & Konseling</span>
+                        </div>
+
+                    </div>
+
+                    <!-- X-Axis Label -->
+                    <div class="absolute left-6 sm:left-8 right-0 bottom-0 h-4 sm:h-6 flex items-center justify-center">
+                        <span class="text-[9px] sm:text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                            POTENSIAL (SUMBU X)
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INDIVIDUAL DEVELOPMENT PLAN (IDP) RECOMMENDATIONS -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 page-break">
+                <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-user-graduate text-emerald-600"></i> Rekomendasi Individual Development Plan (IDP)
+                    </h3>
+                    <span id="outBoxTag" class="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                        Kotak 8
+                    </span>
+                </div>
+
+                <div id="idpRecommendationContent" class="text-xs space-y-3 text-slate-700">
+                    <!-- Dynamic content filled via JS -->
+                </div>
+            </div>
+
+            <!-- SCORE BREAKDOWN TABLE -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 page-break">
+                <h3 class="font-bold text-slate-900 text-sm mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-amber-600"></i> Rincian Kalkulasi Bobot Parameter
+                </h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-[11px] sm:text-xs text-slate-600 border-collapse min-w-[500px]">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-800 font-semibold border-b">
+                                <th class="p-2 w-16">Sumbu</th>
+                                <th class="p-2">Component / Indikator</th>
+                                <th class="p-2 text-center w-20">Bobot</th>
+                                <th class="p-2 text-center w-24">Nilai Raw</th>
+                                <th class="p-2 text-right w-32">Kontribusi Skor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="breakdownTableBody" class="divide-y divide-slate-100">
+                            <!-- Dynamic Rows filled via JS -->
+                        </tbody>
+                        <tfoot class="bg-slate-50 font-bold border-t-2 border-slate-200">
+                            <tr>
+                                <td colspan="4" class="p-2 text-right text-slate-900">Total Sumbu Y (Kinerja):</td>
+                                <td id="tfootTotalY" class="p-2 text-right text-sky-700 text-sm">0.00</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="p-2 text-right text-slate-900">Total Sumbu X (Potensial):</td>
+                                <td id="tfootTotalX" class="p-2 text-right text-emerald-700 text-sm">0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- MODAL PANDUAN INDIKATOR -->
+    <div id="infoModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform scale-95 transition-transform duration-300" id="infoModalContentBox">
+            
+            <!-- Modal Header -->
+            <div class="bg-slate-50 border-b border-slate-200 px-5 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-amber-500"></i>
+                    <span id="modalTitle">Judul Indikator</span>
+                </h3>
+                <button onclick="closeInfoModal()" class="text-slate-400 hover:text-rose-500 transition-colors focus:outline-none">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-5 max-h-[70vh] overflow-y-auto" id="modalBody">
+                <!-- Content will be injected here via JS -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 border-t border-slate-200 px-5 py-3 text-right">
+                <button onclick="closeInfoModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg transition-colors">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-5 border-t border-slate-800 mt-auto no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-slate-400 text-center sm:text-left">
+                <p>© 2026 Dyat23 BKD Provinsi NTB • SIM Talent v3</p>
+                <p>Simulasi Manajemen Talenta ASN Berdasarkan BKN No. 411/2025</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- DATA KAMUS INDIKATOR BKN 411/2025 ---
+        const dictionaryData = {
+            'kinerjaUtama': {
+                title: '1. Kinerja Utama',
+                content: `
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <div><span class="font-bold text-slate-800 block mb-1">a. Batasan</span><p>Penilaian Kinerja merupakan hasil evaluasi kinerja tahunan pegawai ASN yang terdiri atas hasil kerja dan perilaku kerja.</p></div>
+                        <div><span class="font-bold text-slate-800 block mb-1">b. Sumber Data</span><p>Predikat kinerja hasil evaluasi kinerja pegawai ASN dalam layanan e-Kinerja pada ASN Digital.</p></div>
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">c. Cara Pengukuran</span>
+                            <p>Berdasarkan predikat kinerja yang dikonversikan ke dalam angka:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1 text-[13px]">
+                                <li>Sangat Baik = 100</li>
+                                <li>Baik = 80</li>
+                                <li>Butuh Perbaikan = 60</li>
+                                <li>Kurang = 40</li>
+                                <li>Sangat Kurang = 20</li>
+                            </ul>
+                        </div>
+                    </div>`
+            },
+            'penghargaan': {
+                title: '2a. Penghargaan',
+                content: `
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <div><span class="font-bold text-slate-800 block mb-1">a. Batasan</span><p>Penghargaan adalah pengakuan resmi atau formal yang terima oleh ASN atas prestasinya dalam hal capaian kinerja.</p></div>
+                        <div><span class="font-bold text-slate-800 block mb-1">b. Sumber Data</span><p>Piagam/sertifikat penghargaan/tanda apresiasi lainnya yang dapat membuktikan lingkup prestasi yang diraih serta pemberi penghargaan/riwayat penghargaan dalam SIASN.</p></div>
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">c. Cara Pengukuran</span>
+                            <p>Berdasarkan lingkup penghargaan atas prestasi pegawai ASN selama 5 (lima) tahun terakhir:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1 text-[13px]">
+                                <li>Lingkup Internasional = 100</li>
+                                <li>Lingkup Nasional = 75</li>
+                                <li>Lingkup Lintas Instansi = 50</li>
+                                <li>Lingkup Instansi = 25</li>
+                                <li>Tidak pernah = 0</li>
+                            </ul>
+                        </div>
+                    </div>`
+            },
+            'timKerja': {
+                title: '2b. Penugasan dalam Tim Kerja',
+                content: `
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <div><span class="font-bold text-slate-800 block mb-1">a. Batasan</span><p>Penugasan dalam Tim Kerja adalah kedudukan pegawai ASN secara resmi di dalam tim kerja untuk menyelenggarakan tugas-tugas kedinasan dalam rangka mendukung kinerja instansi.</p></div>
+                        <div><span class="font-bold text-slate-800 block mb-1">b. Sumber Data</span><p>Surat keputusan penugasan/surat perintah penugasan/riwayat penugasan dalam tim kerja/ riwayat penugasan tim kerja dalam layanan e-Kinerja ASN Digital.</p></div>
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">c. Cara Pengukuran</span>
+                            <p>Berdasarkan kedudukan tertinggi yang pernah ditugaskan kepada seorang pegawai ASN dalam tim kerja selama kurun waktu 2 (dua) tahun terakhir:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1 text-[13px]">
+                                <li>Ketua tim kerja lingkup lintas instansi = 100</li>
+                                <li>Ketua tim kerja lingkup internal instansi = 75</li>
+                                <li>Anggota tim kerja lingkup lintas instansi = 50</li>
+                                <li>Anggota tim kerja lingkup internal instansi = 25</li>
+                                <li>Tidak mempunyai penugasan = 0</li>
+                            </ul>
+                        </div>
+                    </div>`
+            },
+            'umpanBalik': {
+                title: '2c. Umpan Balik 360 Derajat',
+                content: `
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <div><span class="font-bold text-slate-800 block mb-1">a. Batasan</span><p>Umpan balik 360 derajat merupakan penilaian atas perilaku pegawai ASN oleh atasan, rekan sejawat dan/atau bawahan.</p></div>
+                        <div><span class="font-bold text-slate-800 block mb-1">b. Sumber Data</span><p>Hasil penilaian umpan balik 360 derajat seorang pegawai ASN.</p></div>
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">c. Cara Pengukuran</span>
+                            <p>Berdasarkan hasil penilaian umpan balik 360 derajat yang dikonversikan ke dalam angka:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1 text-[13px]">
+                                <li>Sangat Baik = 100</li>
+                                <li>Baik = 80</li>
+                                <li>Butuh Perbaikan = 60</li>
+                                <li>Kurang = 40</li>
+                                <li>Sangat Kurang = 20</li>
+                            </ul>
+                        </div>
+                    </div>`
+            },
+            'penilaianKompetensi': {
+                 title: '1a. Penilaian Kompetensi',
+                 content: `
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <div><span class="font-bold text-slate-800 block mb-1">a. Batasan</span><p>Penilaian kompetensi adalah suatu proses membandingkan kompetensi (manajerial, sosial kultural dan teknis) yang dimiliki oleh pegawai ASN dengan standar kompetensi jabatan yang dipersyaratkan.</p></div>
+                        <div><span class="font-bold text-slate-800 block mb-1">b. Sumber Data</span><p>Hasil penilaian kompetensi pegawai.</p></div>
+                        <div><span class="font-bold text-slate-800 block mb-1">c. Cara Penilaian</span><p>Penilaian kompetensi manajerial, sosio kultural dan teknis dikonversi ke dalam angka nominal skala 0-100. (Pada tahap awal pemetaan ke 9 kotak, bobot 20% ini berlaku untuk penilaian kompetensi manajerial dan sosial kultural).</p></div>
+                    </div>`
+            },
+            'pengembanganKompetensi': {
+                 title: '1b. Pengembangan Kompetensi',
+                 content: `
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <div><span class="font-bold text-slate-800 block mb-1">a. Batasan</span><p>Pengembangan Kompetensi adalah upaya pemenuhan kebutuhan kompetensi pegawai ASN agar sesuai dengan Standar Kompetensi Jabatan dan rencana pengembangan karier.</p></div>
+                        <div><span class="font-bold text-slate-800 block mb-1">b. Sumber Data</span><p>Riwayat pelatihan dan pengembangan kompetensi dibuktikan dengan sertifikat kepesertaan dan atau sertifikat kompetensi.</p></div>
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">c. Cara Pengukuran</span>
+                            <p>Menghitung nilai rata-rata dari riwayat pelatihan dan pengembangan kompetensi pegawai ASN selama tiga tahun terakhir berdasarkan:</p>
+                            <div class="mt-2 grid grid-cols-2 gap-4 text-[12px]">
+                                <div>
+                                    <span class="font-semibold block border-b pb-1 mb-1">Sertifikat Kepesertaan</span>
+                                    <ul class="space-y-0.5">
+                                        <li>≥8 = 100</li><li>6-8 = 75</li><li>4-6 = 50</li><li>1-3 = 25</li><li>0 = 0</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <span class="font-semibold block border-b pb-1 mb-1">Sertifikasi/Penjenjangan</span>
+                                    <ul class="space-y-0.5">
+                                        <li>≥3 = 100</li><li>1-2 = 50</li><li>0 = 0</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`
+            },
+            'pengalamanJabatan': {
+                 title: '1c. Pengalaman Jabatan',
+                 content: `
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">a. Batasan</span>
+                            <p>Pengalaman Jabatan adalah unsur pengalaman pegawai ASN dalam menduduki jabatan yang terdiri atas: 1. Lama menduduki jabatan; 2. Keragaman riwayat jabatan; 3. Jabatan nondefinitif misalnya Pelaksana Tugas (Plt.), Pelaksana Harian (Plh.), dan Penjabat (Pj.).</p>
+                        </div>
+                        <div><span class="font-bold text-slate-800 block mb-1">b. Sumber Data</span><p>Riwayat jabatan.</p></div>
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">c. Cara Pengukuran</span>
+                            <p>Diukur dengan menggabungkan secara rata-rata nilai yang didapat dari ketiga unsur (Lama Jabatan, Keragaman, dan Jabatan Nondefinitif).</p>
+                        </div>
+                    </div>`
+            },
+            'potensi': {
+                 title: '2. Potensi',
+                 content: `
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">Penjelasan & Cara Penilaian</span>
+                            <p>Penilaian Potensi adalah proses membandingkan potensi yang dimiliki pegawai ASN dengan standar potensi. Penilaian potensi dikonversi ke dalam angka nominal skala 0-40, lalu dihitung persentasenya.</p>
+                        </div>
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">8 Indikator Potensi (Masing-masing bernilai 0 - 5):</span>
+                            <ol class="list-decimal pl-5 mt-1 space-y-1 text-[13px] font-medium text-slate-700">
+                                <li>Kemampuan Intelektual</li>
+                                <li>Kemampuan Interpersonal</li>
+                                <li>Kesadaran Diri</li>
+                                <li>Kemampuan Berpikir Kritis dan Strategis</li>
+                                <li>Kemampuan Menyelesaikan Permasalahan</li>
+                                <li>Kecerdasan Emosi</li>
+                                <li>Kemampuan Belajar Cepat dan Mengembangkan Diri</li>
+                                <li>Motivasi dan Komitmen</li>
+                            </ol>
+                        </div>
+                    </div>`
+            },
+            'pendidikanFormal': {
+                 title: '3a. Tingkat Pendidikan Formal',
+                 content: `
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <div><span class="font-bold text-slate-800 block mb-1">a. Batasan</span><p>Tingkat Pendidikan Formal adalah jenjang pendidikan formal terakhir yang telah selesai ditempuh oleh pegawai ASN.</p></div>
+                        <div><span class="font-bold text-slate-800 block mb-1">b. Sumber Data</span><p>Ijazah terakhir/riwayat pendidikan formal.</p></div>
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">c. Cara Pengukuran</span>
+                            <p>Melihat jenjang pendidikan formal terakhir yang diselesaikan:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1 text-[13px]">
+                                <li>Doktor (S3) = 100</li>
+                                <li>Magister (S2) = 90</li>
+                                <li>Sarjana (S1) / Diploma IV = 80</li>
+                                <li>Diploma III = 70</li>
+                                <li>SLTA (yang sederajat) = 60</li>
+                            </ul>
+                        </div>
+                    </div>`
+            },
+            'kesesuaianBidang': {
+                 title: '3b. Kesesuaian Bidang Ilmu',
+                 content: `
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <div><span class="font-bold text-slate-800 block mb-1">a. Batasan</span><p>Kesesuaian Bidang Ilmu adalah keterkaitan/relevansi bidang ilmu yang dimiliki pegawai dengan rumpun jabatan target.</p></div>
+                        <div><span class="font-bold text-slate-800 block mb-1">b. Sumber Data</span><p>Ijazah/riwayat pendidikan formal.</p></div>
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">c. Cara Pengukuran</span>
+                            <p>Melihat kesesuaian bidang ilmu dengan rumpun jabatan target:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1 text-[13px]">
+                                <li>Sesuai rumpun jabatan target = 100</li>
+                                <li>Tidak sesuai rumpun jabatan target = 50</li>
+                            </ul>
+                        </div>
+                    </div>`
+            },
+            'disiplin': {
+                 title: '4. Integritas dan Moralitas',
+                 content: `
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <div><span class="font-bold text-slate-800 block mb-1">a. Batasan</span><p>Verifikasi Rekam Jejak Disiplin adalah proses untuk memastikan riwayat kepatuhan pegawai terhadap peraturan disiplin PNS dan/atau PPPK.</p></div>
+                        <div><span class="font-bold text-slate-800 block mb-1">b. Sumber Data</span><p>Riwayat hukuman disiplin/Surat Keputusan Penjatuhan Hukuman Disiplin.</p></div>
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">c. Cara Pengukuran</span>
+                            <p>Melakukan pengecekan riwayat hukuman disiplin pegawai dalam 5 tahun terakhir:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1 text-[13px]">
+                                <li>Tidak pernah dijatuhi hukuman = 100</li>
+                                <li>Pernah dijatuhi hukuman ringan = 75</li>
+                                <li>Pernah dijatuhi hukuman sedang = 50</li>
+                                <li>Pernah dijatuhi hukuman berat = 25</li>
+                                <li>Sedang menjalani hukuman disiplin = 0</li>
+                            </ul>
+                        </div>
+                    </div>`
+            }
+        };
+
+        // Modal Control Functions
+        function showInfoModal(key) {
+            const data = dictionaryData[key];
+            if (!data) return;
+
+            document.getElementById('modalTitle').innerText = data.title;
+            document.getElementById('modalBody').innerHTML = data.content;
+            
+            const modal = document.getElementById('infoModal');
+            const modalBox = document.getElementById('infoModalContentBox');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Trigger reflow for animation
+            void modal.offsetWidth; 
+            
+            modal.classList.remove('opacity-0');
+            modalBox.classList.remove('scale-95');
+        }
+
+        function closeInfoModal() {
+            const modal = document.getElementById('infoModal');
+            const modalBox = document.getElementById('infoModalContentBox');
+            
+            modal.classList.add('opacity-0');
+            modalBox.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300); // match duration
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('infoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeInfoModal();
+            }
+        });
+
+        // Data Referensi IDP berdasarkan Kotak
+        const IDP_PROFILES = {
+            1: {
+                title: 'Kinerja Di Bawah Ekspektasi dan Potensial Rendah',
+                category: 'Kinerja Di Bawah & Potensial Rendah',
+                status: 'Diproses Perundang-Undangan',
+                recommendations: [
+                    'Diproses sesuai ketentuan peraturan perundang-undangan yang berlaku terkait kinerja dan disiplin.'
+                ]
+            },
+            2: {
+                title: 'Kinerja Sesuai Ekspektasi dan Potensial Rendah',
+                category: 'Kinerja Sesuai & Potensial Rendah',
+                status: 'Bimbingan & Penempatan Sesuai',
+                recommendations: [
+                    'Pemberian bimbingan kinerja secara intensif oleh atasan langsung.',
+                    'Diikutsertakan dalam program pengembangan kompetensi teknis dasar.',
+                    'Penempatan pada jabatan yang sesuai dengan kualifikasi saat ini.'
+                ]
+            },
+            3: {
+                title: 'Kinerja Di Bawah Ekspektasi dan Potensial Menengah',
+                category: 'Kinerja Di Bawah & Potensial Menengah',
+                status: 'Konseling & Bimbingan Kinerja',
+                recommendations: [
+                    'Pemberian bimbingan kinerja terarah untuk mencapai target SKP.',
+                    'Sesi konseling kinerja untuk mengidentifikasi hambatan pelaksanaan tugas.',
+                    'Pengembangan kompetensi teknis spesifik sesuai bidang tugas.',
+                    'Evaluasi penempatan jabatan agar lebih sesuai dengan potensi.'
+                ]
+            },
+            4: {
+                title: 'Kinerja Di Atas Ekspektasi dan Potensial Rendah',
+                category: 'Kinerja Di Atas & Potensial Rendah',
+                status: 'Rotasi & Pengembangan Kompetensi',
+                recommendations: [
+                    'Dipertimbangkan untuk rotasi jabatan dalam level yang sama (mutasi setara) untuk penyegaran.',
+                    'Pengembangan kompetensi manajerial dan sosial kultural untuk meningkatkan potensi diri.'
+                ]
+            },
+            5: {
+                title: 'Kinerja Sesuai Ekspektasi dan Potensial Menengah',
+                category: 'Kinerja Sesuai & Potensial Menengah',
+                status: 'Penempatan Sesuai & Bangkom',
+                recommendations: [
+                    'Mempertahankan penempatan pada jabatan yang sesuai saat ini.',
+                    'Pemberian bimbingan kinerja untuk mendorong pencapaian di atas ekspektasi.',
+                    'Program pengembangan kompetensi menengah (upskilling).'
+                ]
+            },
+            6: {
+                title: 'Kinerja Di Bawah Ekspektasi dan Potensial Tinggi',
+                category: 'Kinerja Di Bawah & Potensial Tinggi',
+                status: 'Penempatan Sesuai & Konseling',
+                recommendations: [
+                    'Penempatan ulang pada jabatan yang lebih menantang dan sesuai dengan potensi tinggi yang dimiliki.',
+                    'Bimbingan kinerja intensif untuk menyelaraskan potensi dengan hasil kerja aktual.',
+                    'Konseling kinerja untuk mencari tahu penyebab under-performance meskipun potensi tinggi.'
+                ]
+            },
+            7: {
+                title: 'Kinerja Di Atas Ekspektasi dan Potensial Menengah',
+                category: 'Kinerja Di Atas & Potensial Menengah',
+                status: 'Masuk Suksesi Instansi & Pengayaan',
+                recommendations: [
+                    'Dipertahankan pada posisinya dan diberikan tanggung jawab lebih (job enrichment).',
+                    'Direkomendasikan masuk dalam Kelompok Rencana Suksesi Instansi.',
+                    'Dipertimbangkan untuk rotasi/pengayaan jabatan ke bidang strategis.',
+                    'Prioritas untuk mengikuti program pengembangan kompetensi tingkat lanjut atau Tugas Belajar.'
+                ]
+            },
+            8: {
+                title: 'Kinerja Sesuai Ekspektasi dan Potensial Tinggi',
+                category: 'Kinerja Sesuai & Potensial Tinggi',
+                status: 'Masuk Suksesi Instansi & Perluasan',
+                recommendations: [
+                    'Dipertahankan dan dilibatkan dalam proyek strategis instansi.',
+                    'Direkomendasikan kuat masuk dalam Kelompok Rencana Suksesi Instansi.',
+                    'Dipertimbangkan untuk rotasi/perluasan lingkup jabatan (job enlargement).',
+                    'Bimbingan kinerja lanjutan untuk mendorong pencapaian hasil "Di Atas Ekspektasi".'
+                ]
+            },
+            9: {
+                title: 'Kinerja Di Atas Ekspektasi dan Potensial Tinggi',
+                category: 'Kinerja Di Atas & Potensial Tinggi',
+                status: 'Kandidat Promosi & Suksesi Nasional',
+                recommendations: [
+                    'Prioritas Utama untuk Dipromosikan ke jenjang jabatan yang lebih tinggi.',
+                    'Dipertahankan sebagai talenta inti (core talent) organisasi.',
+                    'Masuk dalam Kelompok Rencana Suksesi Instansi dan berpotensi untuk Rencana Suksesi Nasional.',
+                    'Diberikan penghargaan (reward) atas kinerja dan dedikasi luar biasa.'
+                ]
+            }
+        };
+
+        // --- Core Calculation Logic ---
+        function calculateTalentScore() {
+            // 1. Get Profile Info
+            const name = document.getElementById('asnName').value || '-';
+            const unit = document.getElementById('asnUnit').value || '-';
+            const nip = document.getElementById('asnNip').value || '-';
+            const target = document.getElementById('asnTarget').value || '-';
+
+            // Update Header Display
+            document.getElementById('outPegawaiName').innerText = name.toUpperCase();
+            document.getElementById('outPegawaiInstansi').innerText = `${unit.toUpperCase()} • NIP: ${nip} • ${target}`;
+
+            // --- 2. HITUNG SUMBU Y (KINERJA) ---
+            const rawKinerjaUtama = parseFloat(document.getElementById('kinerjaUtama').value) || 0;
+            const wKinerjaUtama = rawKinerjaUtama * 0.60;
+
+            const rawPenghargaan = parseFloat(document.getElementById('penghargaan').value) || 0;
+            const wPenghargaan = rawPenghargaan * 0.15;
+
+            const rawTimKerja = parseFloat(document.getElementById('timKerja').value) || 0;
+            const wTimKerja = rawTimKerja * 0.15;
+
+            const rawUmpanBalik = parseFloat(document.getElementById('umpanBalik').value) || 0;
+            const wUmpanBalik = rawUmpanBalik * 0.10;
+
+            const scoreY = (wKinerjaUtama + wPenghargaan + wTimKerja + wUmpanBalik).toFixed(2);
+            const numScoreY = parseFloat(scoreY);
+
+            // Kategori Sumbu Y
+            let catY = "";
+            let catYDesc = "";
+            if (numScoreY >= 80) { catY = "Tinggi"; catYDesc = "Di Atas Ekspektasi"; }
+            else if (numScoreY >= 60) { catY = "Menengah"; catYDesc = "Sesuai Ekspektasi"; }
+            else { catY = "Rendah"; catYDesc = "Di Bawah Ekspektasi"; }
+
+            // --- 3. HITUNG SUMBU X (POTENSIAL) ---
+            let rawPenilaianKomp = parseFloat(document.getElementById('kompetensiScore').value);
+            if (isNaN(rawPenilaianKomp)) rawPenilaianKomp = 0;
+            if (rawPenilaianKomp > 100) rawPenilaianKomp = 100;
+            if (rawPenilaianKomp < 0) rawPenilaianKomp = 0;
+            const wPenilaianKomp = rawPenilaianKomp * 0.20;
+
+            const vPelatihan = parseFloat(document.getElementById('sertifikatPelatihan').value) || 0;
+            const vSertifikasi = parseFloat(document.getElementById('sertifikasiKeahlian').value) || 0;
+            const rawBangkom = (vPelatihan + vSertifikasi) / 2;
+            const wBangkom = rawBangkom * 0.10;
+
+            const vLamaJab = parseFloat(document.getElementById('lamaJabatan').value) || 0;
+            const vRagamJab = parseFloat(document.getElementById('keragamanJabatan').value) || 0;
+            const vNonDef = parseFloat(document.getElementById('jabatanNonDefinitif').value) || 0;
+            const rawPengalaman = (vLamaJab + vRagamJab + vNonDef) / 3;
+            const wPengalaman = rawPengalaman * 0.10;
+
+            const potensiInputs = document.querySelectorAll('.potensi-input');
+            let sumPotensiRaw = 0;
+            potensiInputs.forEach(input => {
+                let val = parseFloat(input.value) || 0;
+                if(val > 5) { val = 5; input.value = 5; }
+                if(val < 0) { val = 0; input.value = 0; }
+                sumPotensiRaw += val;
+            });
+            document.getElementById('potensiTotalLabel').innerText = `Total ${sumPotensiRaw}/40`;
+            const rawPotensiScale100 = (sumPotensiRaw / 40) * 100;
+            const wPotensi = rawPotensiScale100 * 0.25;
+
+            const rawPendidikan = parseFloat(document.getElementById('pendidikanFormal').value) || 0;
+            const wPendidikan = rawPendidikan * 0.10;
+            
+            const rawKesesuaian = parseFloat(document.getElementById('kesesuaianBidang').value) || 0;
+            const wKesesuaian = rawKesesuaian * 0.10;
+
+            const rawDisiplin = parseFloat(document.getElementById('rekamDisiplin').value) || 0;
+            const wDisiplin = rawDisiplin * 0.15;
+
+            const scoreX = (wPenilaianKomp + wBangkom + wPengalaman + wPotensi + wPendidikan + wKesesuaian + wDisiplin).toFixed(2);
+            const numScoreX = parseFloat(scoreX);
+
+            // Kategori Sumbu X
+            let catX = "";
+            let catXDesc = "";
+            if (numScoreX >= 80) { catX = "Tinggi"; catXDesc = "Potensial Tinggi"; }
+            else if (numScoreX >= 60) { catX = "Menengah"; catXDesc = "Potensial Menengah"; }
+            else { catX = "Rendah"; catXDesc = "Potensial Rendah"; }
+
+            // --- 4. TENTUKAN KOTAK TALENTA (9-BOX) ---
+            let boxNumber = 0;
+            
+            if (numScoreY >= 80) { // Y: Di Atas
+                if (numScoreX >= 80) boxNumber = 9; 
+                else if (numScoreX >= 60) boxNumber = 7; 
+                else boxNumber = 4; 
+            } 
+            else if (numScoreY >= 60) { // Y: Sesuai
+                if (numScoreX >= 80) boxNumber = 8;
+                else if (numScoreX >= 60) boxNumber = 5;
+                else boxNumber = 2;
+            } 
+            else { // Y: Di Bawah
+                if (numScoreX >= 80) boxNumber = 6;
+                else if (numScoreX >= 60) boxNumber = 3;
+                else boxNumber = 1;
+            }
+
+            // --- 5. UPDATE UI DASHBOARD ---
+            document.getElementById('badgeScoreY').innerText = `Skor Y: ${scoreY}`;
+            document.getElementById('badgeScoreX').innerText = `Skor X: ${scoreX}`;
+            
+            document.getElementById('outValueY').innerText = scoreY;
+            document.getElementById('outCatY').innerText = catYDesc;
+            
+            document.getElementById('outValueX').innerText = scoreX;
+            document.getElementById('outCatX').innerText = catXDesc;
+
+            document.getElementById('outBoxBadge').innerText = `KOTAK ${boxNumber}`;
+            document.getElementById('outBoxTag').innerText = `KOTAK ${boxNumber}`;
+            
+            const idpData = IDP_PROFILES[boxNumber];
+            document.getElementById('outStatus').innerText = idpData.status;
+
+            document.querySelectorAll('.matrix-cell').forEach(cell => {
+                cell.classList.remove('grid-box-active');
+                cell.style.opacity = '0.4'; 
+                cell.style.zIndex = '1';
+            });
+            
+            const activeCell = document.getElementById(`box-${boxNumber}`);
+            if(activeCell) {
+                activeCell.classList.add('grid-box-active');
+                activeCell.style.opacity = '1';
+                activeCell.style.zIndex = '20';
+            }
+
+            let idpHtml = `
+                <div class="mb-2">
+                    <p class="font-semibold text-slate-800">${idpData.title}</p>
+                    <p class="text-slate-500 italic mt-0.5">Rekomendasi Tindak Lanjut:</p>
+                </div>
+                <ul class="list-disc pl-5 space-y-1 mt-1 text-slate-700">
+            `;
+            idpData.recommendations.forEach(rec => {
+                idpHtml += `<li>${rec}</li>`;
+            });
+            idpHtml += `</ul>`;
+            document.getElementById('idpRecommendationContent').innerHTML = idpHtml;
+
+            // --- 6. UPDATE BREAKDOWN TABLE ---
+            const tbody = document.getElementById('breakdownTableBody');
+            const formatVal = (val) => Number(val).toFixed(2);
+            
+            const tableRows = `
+                <tr>
+                    <td rowspan="3" class="p-2 border-r align-top font-bold text-sky-800 bg-sky-50/50">KINERJA (Y)</td>
+                    <td class="p-2 pl-3 border-l-4 border-sky-400">1. Kinerja Utama (e-Kinerja)</td>
+                    <td class="p-2 text-center">60%</td>
+                    <td class="p-2 text-center font-mono">${formatVal(rawKinerjaUtama)}</td>
+                    <td class="p-2 text-right font-medium text-sky-600">${formatVal(wKinerjaUtama)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 pl-3 border-l-4 border-sky-300 bg-slate-50/50">2. Kinerja Penguat: Penghargaan (15%) + Tim Kerja (15%)</td>
+                    <td class="p-2 text-center bg-slate-50/50">30%</td>
+                    <td class="p-2 text-center font-mono bg-slate-50/50 text-[10px]">${rawPenghargaan} (P) + ${rawTimKerja} (T)</td>
+                    <td class="p-2 text-right font-medium text-sky-600 bg-slate-50/50">${formatVal(wPenghargaan + wTimKerja)}</td>
+                </tr>
+                <tr class="border-b-2 border-slate-200">
+                    <td class="p-2 pl-3 border-l-4 border-sky-200">3. Kinerja Penguat: Umpan Balik 360</td>
+                    <td class="p-2 text-center">10%</td>
+                    <td class="p-2 text-center font-mono">${formatVal(rawUmpanBalik)}</td>
+                    <td class="p-2 text-right font-medium text-sky-600">${formatVal(wUmpanBalik)}</td>
+                </tr>
+
+                <tr>
+                    <td rowspan="6" class="p-2 border-r align-top font-bold text-emerald-800 bg-emerald-50/50">POTENSIAL (X)</td>
+                    <td class="p-2 pl-3 border-l-4 border-emerald-500">1a. Penilaian Kompetensi</td>
+                    <td class="p-2 text-center">20%</td>
+                    <td class="p-2 text-center font-mono">${formatVal(rawPenilaianKomp)}</td>
+                    <td class="p-2 text-right font-medium text-emerald-600">${formatVal(wPenilaianKomp)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 pl-3 border-l-4 border-emerald-400 bg-slate-50/50">1b. Pengembangan Kompetensi (Rerata Pelatihan & Sertifikasi)</td>
+                    <td class="p-2 text-center bg-slate-50/50">10%</td>
+                    <td class="p-2 text-center font-mono bg-slate-50/50">${formatVal(rawBangkom)}</td>
+                    <td class="p-2 text-right font-medium text-emerald-600 bg-slate-50/50">${formatVal(wBangkom)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 pl-3 border-l-4 border-emerald-300">1c. Pengalaman Jabatan (Rerata Masa, Ragam, Non-definitif)</td>
+                    <td class="p-2 text-center">10%</td>
+                    <td class="p-2 text-center font-mono text-[9px]">Avg(${vLamaJab}, ${vRagamJab}, ${vNonDef}) = ${formatVal(rawPengalaman)}</td>
+                    <td class="p-2 text-right font-medium text-emerald-600">${formatVal(wPengalaman)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 pl-3 border-l-4 border-emerald-400 bg-slate-50/50">2. Potensi Psikologis (Total 8 Indikator / 40 * 100)</td>
+                    <td class="p-2 text-center bg-slate-50/50">25%</td>
+                    <td class="p-2 text-center font-mono bg-slate-50/50">${formatVal(rawPotensiScale100)}</td>
+                    <td class="p-2 text-right font-medium text-emerald-600 bg-slate-50/50">${formatVal(wPotensi)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 pl-3 border-l-4 border-emerald-500">3. Kualifikasi (Pendidikan 10% + Kesesuaian 10%)</td>
+                    <td class="p-2 text-center">20%</td>
+                    <td class="p-2 text-center font-mono text-[10px]">${rawPendidikan} (P) + ${rawKesesuaian} (K)</td>
+                    <td class="p-2 text-right font-medium text-emerald-600">${formatVal(wPendidikan + wKesesuaian)}</td>
+                </tr>
+                <tr>
+                    <td class="p-2 pl-3 border-l-4 border-emerald-600 bg-slate-50/50">4. Integritas / Disiplin</td>
+                    <td class="p-2 text-center bg-slate-50/50">15%</td>
+                    <td class="p-2 text-center font-mono bg-slate-50/50">${formatVal(rawDisiplin)}</td>
+                    <td class="p-2 text-right font-medium text-emerald-600 bg-slate-50/50">${formatVal(wDisiplin)}</td>
+                </tr>
+            `;
+            
+            tbody.innerHTML = tableRows;
+            document.getElementById('tfootTotalY').innerText = scoreY;
+            document.getElementById('tfootTotalX').innerText = scoreX;
+        }
+
+        function setSelectValue(id, value) {
+            const el = document.getElementById(id);
+            if(el) el.value = value;
+        }
+
+        function loadPreset(type) {
+            if(type === 'high') {
+                setSelectValue('kinerjaUtama', '100');
+                setSelectValue('penghargaan', '75');
+                setSelectValue('timKerja', '100');
+                setSelectValue('umpanBalik', '100');
+                
+                document.getElementById('kompetensiScore').value = 92;
+                setSelectValue('sertifikatPelatihan', '100');
+                setSelectValue('sertifikasiKeahlian', '100');
+                setSelectValue('lamaJabatan', '100');
+                setSelectValue('keragamanJabatan', '100');
+                setSelectValue('jabatanNonDefinitif', '80');
+
+                document.querySelectorAll('.potensi-input').forEach(input => input.value = 5);
+
+                setSelectValue('pendidikanFormal', '90');
+                setSelectValue('kesesuaianBidang', '100');
+                setSelectValue('rekamDisiplin', '100');
+
+                document.getElementById('asnName').value = 'BUNGA LESTARI, S.T., M.Sc.';
+                
+            } else if (type === 'mid') {
+                setSelectValue('kinerjaUtama', '80');
+                setSelectValue('penghargaan', '25');
+                setSelectValue('timKerja', '50');
+                setSelectValue('umpanBalik', '80');
+                
+                document.getElementById('kompetensiScore').value = 75;
+                setSelectValue('sertifikatPelatihan', '50');
+                setSelectValue('sertifikasiKeahlian', '50');
+                setSelectValue('lamaJabatan', '80');
+                setSelectValue('keragamanJabatan', '80');
+                setSelectValue('jabatanNonDefinitif', '40');
+
+                document.querySelectorAll('.potensi-input').forEach(input => input.value = 3);
+
+                setSelectValue('pendidikanFormal', '80');
+                setSelectValue('kesesuaianBidang', '100');
+                setSelectValue('rekamDisiplin', '100');
+
+                document.getElementById('asnName').value = 'ANDI SYAHPUTRA, S.Kom.';
+            }
+            
+            calculateTalentScore();
+        }
+
+        function resetForm() {
+            setSelectValue('kinerjaUtama', '80');
+            setSelectValue('penghargaan', '25');
+            setSelectValue('timKerja', '75');
+            setSelectValue('umpanBalik', '80');
+            
+            document.getElementById('kompetensiScore').value = 85;
+            setSelectValue('sertifikatPelatihan', '75');
+            setSelectValue('sertifikasiKeahlian', '50');
+            setSelectValue('lamaJabatan', '100');
+            setSelectValue('keragamanJabatan', '100');
+            setSelectValue('jabatanNonDefinitif', '60');
+
+            document.querySelectorAll('.potensi-input').forEach(input => input.value = 4);
+
+            setSelectValue('pendidikanFormal', '90');
+            setSelectValue('kesesuaianBidang', '100');
+            setSelectValue('rekamDisiplin', '100');
+
+            document.getElementById('asnName').value = 'IHDIYAT REA BUSTANI, S.STP., M.A.P.';
+            document.getElementById('asnUnit').value = 'BADAN KEPEGAWAIAN DAERAH PROVINSI NTB';
+            document.getElementById('asnNip').value = '199408152016091002';
+            setSelectValue('asnTarget', 'Jenjang JF Ahli Muda');
+            
+            calculateTalentScore();
+        }
+    </script>
+</body>
+</html>
